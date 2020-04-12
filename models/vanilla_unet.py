@@ -15,6 +15,8 @@ class VanillaUNet(nn.Module):
         super(VanillaUNet, self).__init__()
 
         self.layer_names = ['layer_1', 'layer_2', 'layer_3', 'layer_4', 'layer_5']
+        self.input_channel = in_channel
+        self.output_channel = out_channel
 
         self.encoders = nn.ModuleDict([
             (name, block(ic, oc)) for name, block, ic, oc in zip(
@@ -50,3 +52,8 @@ class VanillaUNet(nn.Module):
         out_image = self.output_layer(out_image)
 
         return out_image
+
+    def get_output_shape(self, height, width):
+        Z = torch.zeros(1, self.input_channel, height, width, device=next(self.parameters()).device)
+        out = self.forward(Z)
+        return tuple(out.shape[-2:])
