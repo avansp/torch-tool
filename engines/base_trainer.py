@@ -8,8 +8,8 @@ class AbstractTrainer(ABC):
 
     def __init__(self, log_dir, device='cpu'):
 
-        assert not os.path.isdir(log_dir), f"Directory {log_dir} already exists."
-        os.makedirs(log_dir)
+        if not os.path.isdir(log_dir):
+            os.makedirs(log_dir)
 
         self.log_dir = log_dir
         self.device = device
@@ -53,9 +53,10 @@ class AbstractTrainer(ABC):
         assert self.model is not None, "Call 'set_model' first."
 
     @abstractmethod
-    def set_model(self, model, hyper_params=None):
-        pass
+    def set_model(self, *args, **kwargs):
+        raise NotImplementedError
 
     @abstractmethod
     def train(self, num_epoch):
-        pass
+        raise NotImplementedError
+
