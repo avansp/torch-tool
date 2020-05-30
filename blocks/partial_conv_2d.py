@@ -43,8 +43,7 @@ class PartialConv2d(nn.Conv2d):
     def set_mask(self, mask_in):
         # check valid sizes
         mask_shape = mask_in.shape
-        assert len(mask_shape) == 4, "Mask shape must be: [BATCH, 1, HEIGHT, WIDTH]"
-        assert mask_shape[1] == 1, "Mask channel must be 1"
+        assert len(mask_shape) == 4, "Mask shape must be: [BATCH, CHANNELS, HEIGHT, WIDTH]"
         self.mask_in = mask_in
 
     def forward(self, image_in):
@@ -53,14 +52,15 @@ class PartialConv2d(nn.Conv2d):
         im_shape = image_in.shape
         assert len(im_shape) == 4, "Image shape must be: [BATCH, CHANNELS, HEIGHT, WIDTH]"
 
+        device = self.weight.device
+
         # get the mask, create one if it's still None
         if self.mask_in is None:
-            self.mask_in = torch.ones((im_shape[0], 1, im_shape[2], im_shape[3]), device=self.weight.device)
+            self.mask_in = torch.ones_like(image_in, device=device)
 
         # check equal shape between image & mask
         mask_shape = self.mask_in.shape
-        assert im_shape[0] == mask_shape[0] and im_shape[2] == mask_shape[2] and im_shape[3] == mask_shape[3], \
-            "Image and mask sizes do not match"
+        assert im_shape == mask_shape, "Image and mask sizes do not match"
 
         # if mask channel is 1 but image channel > 1, then we'll repeat the mask channel
         if mask_shape[1] == 1 and self.in_channels > 1:
@@ -68,8 +68,8 @@ class PartialConv2d(nn.Conv2d):
 
         # pad image_in & mask_in, which will be part of the learning
         # note that mask==0 is the regions to learn for the inpainting
-        image_in = F.pad(image_in, self.pconv_padding, value=0).to(self.weight.device)
-        mask_in = F.pad(self.mask_in, self.pconv_padding, value=0).to(self.weight.device)
+        image_in = F.pad(image_in, self.pconv_padding, value=0).to(device)
+        mask_in = F.pad(self.mask_in, self.pconv_padding, value=0).to(device)
 
         # prepare weight for the mask
         if self.weight_mask_updater is None:
