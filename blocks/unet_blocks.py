@@ -12,8 +12,7 @@ class DoubleConvBlock(nn.Module):
 
     """
 
-    def __init__(self, in_channels, out_channels,
-                 kernel_size=3, stride=1):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1):
         super(DoubleConvBlock, self).__init__()
 
         self.model = nn.Sequential(OrderedDict([
