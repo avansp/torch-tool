@@ -12,10 +12,8 @@
 #    Return value from forward() is always an image.
 # 3. Create additional padding that the padding will be learned by partial conv
 #    So the output size will be the same if stride==1.
-# 4. Mask input argument is mandatory
+# 4. In the forward function, argument is either an image_tensor or a tuple of (image_tensor, mask_tensor)
 # 5. Removed last_size
-# 6. Mask should have the same channel as the image channel.
-#    If mask channel is 1, then the mask will be replicated along the channel axes.
 
 import torch
 import torch.nn.functional as F
@@ -37,39 +35,40 @@ class PartialConv2d(nn.Conv2d):
         new_pad = tuple(int((s - 1) / 2) for s in self.kernel_size)
         self.pconv_padding = (new_pad[0], new_pad[0], new_pad[1], new_pad[1])
 
-        # default mask is None (no hole), but we don't know yet its size
-        self.mask_in = None
+    def forward(self, x):
+        """
+        Forward passing algorithm.
 
-    def set_mask(self, mask_in):
-        # check valid sizes
-        mask_shape = mask_in.shape
-        assert len(mask_shape) == 4, "Mask shape must be: [BATCH, CHANNELS, HEIGHT, WIDTH]"
-        self.mask_in = mask_in
+        :param x: is either a image:tensor or a tuple of (image:tensor, mask:tensor)
+        :return: a convolved image:tensor. You can get the mask output from self.mask_out variable
+        """
 
-    def forward(self, image_in):
+        device = self.weight.device
+
+        if type(x) is tuple:
+            assert len(x) == 2, "Input tuple must be (image, mask)"
+            image_in = x[0]
+            mask_in = x[1]
+        else:
+            image_in = x
+            mask_in = torch.ones_like(image_in, device=device)
 
         # check the validity of the image input
         im_shape = image_in.shape
         assert len(im_shape) == 4, "Image shape must be: [BATCH, CHANNELS, HEIGHT, WIDTH]"
 
-        device = self.weight.device
-
-        # get the mask, create one if it's still None
-        if self.mask_in is None:
-            self.mask_in = torch.ones_like(image_in, device=device)
-
         # check equal shape between image & mask
-        mask_shape = self.mask_in.shape
+        mask_shape = mask_in.shape
         assert im_shape == mask_shape, "Image and mask sizes do not match"
 
         # if mask channel is 1 but image channel > 1, then we'll repeat the mask channel
         if mask_shape[1] == 1 and self.in_channels > 1:
-            self.mask_in = self.mask_in.repeat(1, self.in_channels, 1, 1)
+            mask_in = mask_in.repeat(1, self.in_channels, 1, 1)
 
         # pad image_in & mask_in, which will be part of the learning
         # note that mask==0 is the regions to learn for the inpainting
         image_in = F.pad(image_in, self.pconv_padding, value=0).to(device)
-        mask_in = F.pad(self.mask_in, self.pconv_padding, value=0).to(device)
+        mask_in = F.pad(mask_in, self.pconv_padding, value=0).to(device)
 
         # prepare weight for the mask
         if self.weight_mask_updater is None:

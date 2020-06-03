@@ -15,7 +15,6 @@ class PartialConv2dUnitTest(unittest.TestCase):
 
         p = PartialConv2d(1, 16, 3).to(self.device)  # input=1, output=16, kernel_size=3
         x = torch.rand(5, 1, 32, 32)                 # input shape = 5 x 1 x 32 x 32, mask == none
-        self.assertIsNone(p.mask_in)
 
         y = p(x)                                     # output shape should be = 5 x 16 x 32 x 32
         self.assertEqual(y.shape, torch.Size([5, 16, 32, 32]))
@@ -27,9 +26,7 @@ class PartialConv2dUnitTest(unittest.TestCase):
         # check slide win size
         self.assertEqual(p.slide_winsize, 9)  # winsize = kernel_size[0] * kernel_size[1] * num_channels
 
-        # since there is no mask, then the mask_out will be the same as mask_in
-        # all are 1.0
-        self.assertTrue(p.mask_in.equal(torch.ones(5, 1, 32, 32, device=self.device)))
+        # since there is no mask, then the mask_out will be all 1.0
         self.assertTrue(p.mask_out.equal(torch.ones(5, 16, 32, 32, device=self.device)))
 
         # check the mask ratio
