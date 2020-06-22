@@ -1,1 +1,2 @@
 from .image_mask_dataset import ImageMaskDataset
+from .image_irregular_mask_dataset import ImageIrregularMaskDataset
