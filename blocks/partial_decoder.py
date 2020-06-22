@@ -12,14 +12,14 @@ class PartialDecoderBlock(nn.Module):
     * upsampling is down individually: upsampling_img, upsampling_mask
     """
 
-    def __init__(self, in_channel, mid_channel, out_channel, kernel_size, stride=(1, 1), bn=True):
+    def __init__(self, in_channel, out_channel, kernel_size, stride=(1, 1), bn=True, relu_factor=0.0):
         super(PartialDecoderBlock, self).__init__()
 
         self.pconv_block = nn.ModuleList()
-        self.pconv_block.append(PartialConv2d(mid_channel, out_channel, kernel_size, stride=stride))
+        self.pconv_block.append(PartialConv2d(in_channel + out_channel, out_channel, kernel_size, stride=stride))
         if bn:
             self.pconv_block.append(nn.BatchNorm2d(out_channel))
-        self.pconv_block.append(nn.ReLU(True))
+        self.pconv_block.append(nn.LeakyReLU(relu_factor, inplace=True))
 
         self.__in_channels = in_channel
 
@@ -32,7 +32,7 @@ class PartialDecoderBlock(nn.Module):
 
     def set_concat_image(self, concat_image, clone=False):
         assert len(concat_image.shape) == 4, "Image must be in (batch, channels, height, width)."
-        assert concat_image.shape[1] + self.__in_channels == self.pconv_block[0].in_channels, ""
+        assert concat_image.shape[1] + self.__in_channels == self.pconv_block[0].in_channels, "Invalid channels"
         if clone:
             self.__concat_image = concat_image.clone().detach()
         else:
