@@ -29,7 +29,7 @@ class VanillaUNetTrainer(AbstractTrainer):
     def set_model(self, in_channel, out_channel,
                   hyper_params=None):
 
-        self.model = VanillaUNet(in_channel, out_channel).to(self.device)
+        self.__model = VanillaUNet(in_channel, out_channel).to(self.device)
 
         if hyper_params is None:
             hyper_params = {
@@ -39,15 +39,14 @@ class VanillaUNetTrainer(AbstractTrainer):
             }
 
         # optimizers & criterion
-        self.optimizer = torch.optim.RMSprop(self.model.parameters(),
+        self.optimizer = torch.optim.RMSprop(self.__model.parameters(),
                                              lr=hyper_params['lr'],
                                              weight_decay=hyper_params['weight_decay'],
                                              momentum=hyper_params['momentum'])
         self.loss = torch.nn.BCEWithLogitsLoss()
 
     def train(self, num_epoch):
-
-        self.check_valid()
+        super(VanillaUNetTrainer, self).train(num_epoch)
 
         # create writer as a new folder
         now_str = str(dt.datetime.now())
@@ -60,14 +59,14 @@ class VanillaUNetTrainer(AbstractTrainer):
 
         for epoch in range(num_epoch):
 
-            # set the model in training mode
-            self.model.train()
+            # set the __model in training mode
+            self.__model.train()
 
             # use tqdm as progress bar
-            with tqdm(total=len(self.train_loader.dataset)) as pbar:
+            with tqdm(total=len(self.__train_loader.dataset)) as pbar:
 
                 last_loss = 0.00
-                for step, (img, mask_true) in enumerate(self.train_loader):
+                for step, (img, mask_true) in enumerate(self.__train_loader):
 
                     # set the device
                     img = img.to(self.device)
@@ -77,7 +76,7 @@ class VanillaUNetTrainer(AbstractTrainer):
                     img = torch.nn.functional.pad(img, self.pad_size)
 
                     # predict
-                    mask_pred = self.model(img)
+                    mask_pred = self.__model(img)
 
                     # calculate the loss
                     loss = self.loss(mask_pred, mask_true)

@@ -17,3 +17,4 @@ class PartialUNetUnitTest(unittest.TestCase):
         y = punet((im, mask))
         self.assertEqual(y.shape, (2, 3, 512, 512))
         self.assertEqual(punet.get_mask_out().shape, (2, 3, 512, 512))
+
