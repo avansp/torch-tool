@@ -1,0 +1,6 @@
+setuptools>=47.3.1
+torch>=1.6.0a0+e088902
+numpy>=1.18.1
+tqdm>=4.46.0
+torchvision>=0.7.0a0+5ba57ea
+Pillow>=7.1.2

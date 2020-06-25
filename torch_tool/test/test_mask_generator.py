@@ -1,5 +1,5 @@
 import unittest
-from utils import MaskGenerator
+from torch_tool import MaskGenerator
 import numpy as np
 
 

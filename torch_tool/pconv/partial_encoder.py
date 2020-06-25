@@ -1,5 +1,7 @@
 import torch.nn as nn
-from blocks import PartialConv2d
+from . import PartialConv2d
+
+__all__ = ["PartialEncoderBlock"]
 
 
 class PartialEncoderBlock(nn.Module):

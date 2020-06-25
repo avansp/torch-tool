@@ -1,5 +1,5 @@
 from torch import nn
-from blocks.unet_blocks import *
+from .unet_blocks import *
 
 
 class VanillaUNet(nn.Module):

@@ -1,6 +1,6 @@
 import unittest
 import torch
-from models import PartialUNet
+from torch_tool.pconv import PartialUNet
 
 
 class PartialUNetUnitTest(unittest.TestCase):

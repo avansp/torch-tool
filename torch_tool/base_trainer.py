@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from utils import dataset_splitter
 from torch.utils.data import DataLoader
 import os
+
+__all__ = ["AbstractTrainer"]
 
 
 class AbstractTrainer(ABC):

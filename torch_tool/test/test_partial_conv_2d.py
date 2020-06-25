@@ -1,5 +1,5 @@
 import unittest
-from blocks import PartialConv2d
+from torch_tool.pconv import PartialConv2d
 import torch
 
 

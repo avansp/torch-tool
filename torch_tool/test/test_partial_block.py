@@ -1,5 +1,5 @@
 import unittest
-from blocks import PartialEncoderBlock, PartialConv2d, PartialDecoderBlock
+from torch_tool.pconv import PartialEncoderBlock, PartialConv2d, PartialDecoderBlock
 import torch
 from torch.nn import LeakyReLU, BatchNorm2d
 

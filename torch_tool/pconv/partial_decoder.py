@@ -1,7 +1,8 @@
 import torch
 from torch import nn
-from blocks import PartialConv2d
+from . import PartialConv2d
 
+__all__ = ["PartialDecoderBlock"]
 
 class PartialDecoderBlock(nn.Module):
     """

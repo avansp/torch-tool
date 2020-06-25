@@ -1,5 +1,7 @@
 from torch import nn
-from blocks import PartialEncoderBlock, PartialDecoderBlock
+from . import PartialEncoderBlock, PartialDecoderBlock
+
+__all__ = ["PartialUNet"]
 
 
 class PartialUNet(nn.Module):

@@ -1,8 +1,9 @@
 from torch import nn
 import torch
 from collections import OrderedDict
-import utils.layer_utils as lu
 import torch.nn.functional as F
+
+__all__ = ["DoubleConvBlock", "DownSampleBlock", "UpSampleBlock"]
 
 
 class DoubleConvBlock(nn.Module):
@@ -32,13 +33,6 @@ class DoubleConvBlock(nn.Module):
 
     def get_output(self):
         return self.out_image
-
-    def get_output_shape(self, height, width):
-        models = {k: v for k, v in self.model.named_children()}
-        out_shape = lu.conv2d_output_shape(height, width, models['conv1'])
-        out_shape = lu.conv2d_output_shape(out_shape[0], out_shape[1], models['conv2'])
-
-        return out_shape
 
 
 class DownSampleBlock(nn.Module):

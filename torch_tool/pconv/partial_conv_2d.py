@@ -17,7 +17,9 @@
 
 import torch
 import torch.nn.functional as F
-from torch import nn, cuda
+from torch import nn
+
+__all__ = ["PartialConv2d"]
 
 
 class PartialConv2d(nn.Conv2d):

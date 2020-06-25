@@ -4,7 +4,7 @@ import os
 from torchvision import transforms
 from PIL import Image
 import numpy as np
-from utils import MaskGenerator
+from .mask_generator import MaskGenerator
 
 
 class ImageIrregularMaskDataset(Dataset):

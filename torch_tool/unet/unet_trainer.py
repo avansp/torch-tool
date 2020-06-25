@@ -1,11 +1,14 @@
-from .base_trainer import AbstractTrainer
-from models import VanillaUNet
+from .vanilla_unet import VanillaUNet
+from torch_tool import AbstractTrainer
+
 import torch
 from tqdm import tqdm
 
 from torch.utils.tensorboard.writer import SummaryWriter
 import datetime as dt
 import os
+
+__all__ = ["VanillaUNetTrainer"]
 
 
 class VanillaUNetTrainer(AbstractTrainer):
