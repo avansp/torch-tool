@@ -1,10 +1,10 @@
-# from trainers import AbstractTrainer
+# from trainers import BaseTrainer
 # from src import ImageIrregularMaskDataset
 # from . import PartialUNet
 #
 # __all__ = ["PartialUNetTrainer"]
 #
-# class PartialUNetTrainer(AbstractTrainer):
+# class PartialUNetTrainer(BaseTrainer):
 #     def __init__(self, log_dir, device):
 #         super(PartialUNetTrainer, self).__init__(log_dir, device)
 #
@@ -15,8 +15,8 @@
 #         print(f"PartialUNetTrainer: data loader is ready with {n} images.")
 #         self.set_loader(ds, split=split, num_cpus=num_cpus, batch_size=batch_size)
 #
-#     def set_model(self, in_channel, out_channel):
-#         self.__model = PartialUNet(in_channel, out_channel).to(self.device)
+#     def initialize(self, in_channel, out_channel):
+#         self.model = PartialUNet(in_channel, out_channel).to(self.device)
 #         print(f"PartialUNetTrainer: PartialUNet model is ready.")
 #
 #     def train(self, num_epoch):

@@ -1,11 +1,11 @@
-from abc import ABC, abstractmethod
 from torch.utils.data import DataLoader
 import os
+import torch_tool as tt
 
-__all__ = ["AbstractTrainer"]
+__all__ = ["BaseTrainer"]
 
 
-class AbstractTrainer(ABC):
+class BaseTrainer():
 
     def __init__(self, log_dir, device='cpu'):
 
@@ -21,10 +21,10 @@ class AbstractTrainer(ABC):
         self.__val_loader = None
         self.__test_loader = None
 
-        # setup these with set_model
+        # must setup this before training
         self.optimizer = None
         self.loss = None
-        self.__model = None
+        self.model = None
 
     @property
     def train_loader(self):
@@ -40,7 +40,7 @@ class AbstractTrainer(ABC):
 
     def set_loader(self, dataset, batch_size=1, split=None, num_cpus=1):
 
-        sub_ds = dataset_splitter(dataset, split)
+        sub_ds = tt.dataset_splitter(dataset, split)
         print(f"Total data size = {len(dataset):d}")
 
         self.batch_size = batch_size
@@ -63,16 +63,12 @@ class AbstractTrainer(ABC):
         assert self.batch_size > 0, "Batch size must be positive"
         assert all([i is not None for i in [self.__train_loader, self.__test_loader, self.__val_loader]]), \
             "Call 'set_loader' first."
-        assert self.__model is not None, "Call 'set_model' first."
-
-    @property
-    def model(self):
-        return self.__model
-
-    @abstractmethod
-    def set_model(self, *args, **kwargs):
-        raise NotImplementedError
+        assert self.model is not None, "Model is undefined."
+        assert self.optimizer is not None, "Optimizer has not been set."
+        assert self.loss is not None, "Loss function is undefined."
 
     def train(self, num_epoch):
         self.check_valid()
-        assert num_epoch>0, f"Invalid number of EPOCH (num_epoch={num_epoch})"
+        assert num_epoch > 0, f"Invalid number of EPOCH (num_epoch={num_epoch})"
+
+        self.model.train()

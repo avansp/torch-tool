@@ -1,5 +1,5 @@
 from .vanilla_unet import VanillaUNet
-from torch_tool import AbstractTrainer
+from torch_tool import BaseTrainer
 
 import torch
 from tqdm import tqdm
@@ -11,7 +11,7 @@ import os
 __all__ = ["VanillaUNetTrainer"]
 
 
-class VanillaUNetTrainer(AbstractTrainer):
+class VanillaUNetTrainer(BaseTrainer):
     """
     Train image segmentation network.
     Training:
@@ -22,17 +22,17 @@ class VanillaUNetTrainer(AbstractTrainer):
     def __init__(self, in_channel, out_channel,
                  **kwargs):
         super(VanillaUNetTrainer, self).__init__(**kwargs)
-        self.set_model(in_channel, out_channel)
+        self.initialize(in_channel, out_channel)
 
         # this is hardcoded in Vanilla U-Net
         self.in_img_shape = (572, 572)
         self.out_img_shape = (388, 388)
         self.pad_size = [(572 - 388) // 2] * 4
 
-    def set_model(self, in_channel, out_channel,
-                  hyper_params=None):
+    def initialize(self, in_channel, out_channel,
+                   hyper_params=None):
 
-        self.__model = VanillaUNet(in_channel, out_channel).to(self.device)
+        self.set_model(VanillaUNet(in_channel, out_channel).to(self.device))
 
         if hyper_params is None:
             hyper_params = {
@@ -42,7 +42,7 @@ class VanillaUNetTrainer(AbstractTrainer):
             }
 
         # optimizers & criterion
-        self.optimizer = torch.optim.RMSprop(self.__model.parameters(),
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(),
                                              lr=hyper_params['lr'],
                                              weight_decay=hyper_params['weight_decay'],
                                              momentum=hyper_params['momentum'])
@@ -62,8 +62,8 @@ class VanillaUNetTrainer(AbstractTrainer):
 
         for epoch in range(num_epoch):
 
-            # set the __model in training mode
-            self.__model.train()
+            # set the model in training mode
+            self.model.train()
 
             # use tqdm as progress bar
             with tqdm(total=len(self.__train_loader.dataset)) as pbar:
@@ -79,7 +79,7 @@ class VanillaUNetTrainer(AbstractTrainer):
                     img = torch.nn.functional.pad(img, self.pad_size)
 
                     # predict
-                    mask_pred = self.__model(img)
+                    mask_pred = self.model(img)
 
                     # calculate the loss
                     loss = self.loss(mask_pred, mask_true)
