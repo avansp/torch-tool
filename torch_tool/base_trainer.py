@@ -19,6 +19,7 @@ class BaseTrainer():
 
         self.device = device
         self.model_name = model_name
+        self.__exp_name = ''
 
         # setup these from set_loader
         self.__train_loader = None
@@ -111,6 +112,13 @@ class BaseTrainer():
         fname = os.path.join(self.root_dir, f"{tag}test_loader.pth")
         torch.save(self.test_loader, fname)
         print(f"Saved test loader in {fname}")
+
+    def load_loaders(self, tag=""):
+        assert os.path.isdir(self.root_dir), f"Log directory {self.root_dir} does not exist. Cannot load loaders."
+
+        self.__train_loader = torch.load(os.path.join(self.root_dir, f"{tag}train_loader.pth"))
+        self.__val_loader = torch.load(os.path.join(self.root_dir, f"{tag}val_loader.pth"))
+        self.__test_loader = torch.load(os.path.join(self.root_dir, f"{tag}test_loader.pth"))
 
     def check_valid(self):
         assert self.batch_size > 0, "Batch size must be positive"
