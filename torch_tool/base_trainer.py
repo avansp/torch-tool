@@ -33,7 +33,7 @@ class BaseTrainer():
 
         # fill in during run
         self.train_losses = []
-        self.test_losses = []
+        self.test_result = {}
 
     @property
     def train_loader(self):
@@ -77,7 +77,7 @@ class BaseTrainer():
 
     @property
     def data_size(self):
-        return self.train_size + self.test_size + self.val_size
+        return self.train_data_size + self.test_data_size + self.val_data_size
 
     def set_loader(self, dataset, batch_size=1, split=None, num_cpus=1):
 
@@ -128,6 +128,23 @@ class BaseTrainer():
         assert self.optimizer is not None, "Optimizer has not been set."
         assert self.loss is not None, "Loss function is undefined."
 
+    def reset(self, num_epochs):
+        """
+        Reset the training, validation & test results
+        """
+        print(f"BaseTrainer: reset the training, validation & test results.", flush=True)
+
+        # allocate training loss matrix
+        self.train_losses = torch.zeros((self.train_size, num_epochs), dtype=torch.float)
+
+        # prepare the test results:
+        # test result will be a dictionary, where each is a tensor of (self.test_data_size, num_epochs)
+        self.test_result = {
+            'loss': torch.empty((self.test_size, 0), dtype=torch.float),
+            'pred': torch.empty((self.test_data_size, 0), dtype=torch.int),
+            'prob': torch.empty((self.test_data_size, 0), dtype=torch.float)
+        }
+
     def run(self, num_epochs):
         """
         Run the whole test & training loop for num_epochs of EPOCH's
@@ -136,10 +153,7 @@ class BaseTrainer():
         self.check_valid()
         assert num_epochs > 0, f"Invalid number of EPOCH (num_epoch={num_epochs})"
 
-        # allocate training loss matrix
-        self.train_losses = torch.zeros((self.train_size, num_epochs), dtype=torch.float)
-
-        self.test()
+        self.reset(num_epochs)
         for epoch in range(1, num_epochs + 1):
             self.train(epoch)
             self.test()
@@ -152,20 +166,29 @@ class BaseTrainer():
         # set eval mode ON
         self.model.eval()
 
-        test_loss = 0.0
-        correct = 0
+        # collect test results
+        losses = torch.empty((self.test_size, ), dtype=torch.float)
+        pred = torch.tensor([], dtype=torch.int)
+        prob = torch.tensor([], dtype=torch.float)
 
         with torch.no_grad():
-            for img_in, label in self.test_loader:
-                output = self.model(img_in)
-                test_loss += self.loss(output, label).item()
-                pred = output.data.max(1, keepdim=True)[1]
-                correct += pred.eq(label.data.view_as(pred)).sum()
+            for i, (data_in, target) in enumerate(self.test_loader):
+                data_out = self.model(data_in)
+                losses[i] = self.loss(data_out, target).item()
 
-        test_loss /= self.test_size
-        self.test_losses.append(test_loss)
+                argmax = data_out.max(1, keepdim=False)
+                pred = torch.cat((pred, argmax.indices), 0)
+                prob = torch.cat((prob, argmax.values), 0)
 
-        print(f"Current test: avg. loss={test_loss:.4f}, acc={correct}/{self.test_data_size} ({100. * correct / self.test_data_size:.2f}%)", flush=True)
+        # append to the test_result
+        self.test_result['pred'] = torch.cat((self.test_result['pred'], pred.view(-1, 1)), 1)
+        self.test_result['prob'] = torch.cat((self.test_result['prob'], prob.view(-1, 1)), 1)
+        self.test_result['loss'] = torch.cat((self.test_result['loss'], losses.view(-1, 1)), 1)
+
+                # pred = data_out.data.max(1, keepdim=True)[1]
+                # self.test_result['correct'].append(pred.eq(target.data.view_as(pred)).sum())
+
+        # print(f"Current test: avg. loss={test_loss:.4f}, acc={correct}/{self.test_data_size} ({100. * correct / self.test_data_size:.2f}%)", flush=True)
 
     def train(self, epoch):
         """
@@ -218,5 +241,5 @@ class BaseTrainer():
             'model_state_dict': self.model.state_dict(),
             'optim_state_dict': self.optimizer.state_dict(),
             'train_losses': self.train_losses,
-            'test_losses': self.test_losses
+            'test_result': self.test_result
         }, **kwargs), os.path.join(self.log_dir, f"{self.model_name}_EPOCH_{epoch:03d}.pth"))
